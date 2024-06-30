@@ -6,7 +6,9 @@ use syn::punctuated::Punctuated;
 use syn::{Attribute, Expr, Meta, Token, Type, TypeParam};
 
 pub struct AttributeArgument {
+    #[allow(dead_code)]
     pub param: Ident,
+    #[allow(dead_code)]
     pub eq: Token![=],
     pub fn_name: Ident,
 }
