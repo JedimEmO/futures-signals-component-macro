@@ -1,0 +1,39 @@
+[package]
+name = "futures-signals-component-macro"
+version = "0.1.0"
+edition = "2021"
+authors = ["Mathias Myrland <jedimemo@gmail.com>"]
+keywords = ["reactive", "signal", "frp"]
+categories = ["gui", "web-programming", "wasm"]
+repository = "https://github.com/JedimEmO/futures-signals-component-macro"
+homepage = "https://github.com/JedimEmO/futures-signals-component-macro"
+license = "MIT"
+description = "Macro for creating futures-signals compatible components"
+
+resolver = "2"
+
+[features]
+
+dominator = ["dep:dominator"]
+
+[lib]
+proc-macro = true
+
+[[test]]
+name = "futures-signals-component-macro"
+path = "tests/test.rs"
+
+[dependencies]
+convert_case = "^0.6.0"
+proc-macro2 = "^1.0.63"
+syn = { version = "^2.0.22", features = ["full"] }
+quote = "^1.0.29"
+dominator = { version = "^0.5.34", optional = true }
+
+[dev-dependencies]
+num-traits = "0.2.19"
+dominator = { version = "0.5.34" }
+futures-signals = { version = "0.3.33" }
+wasm-bindgen-test = { version = "0.3.42" }
+wasm-bindgen-futures = { version = "0.4.42" }
+web-sys = { version = "0.3.69" }
