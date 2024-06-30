@@ -19,7 +19,7 @@ mod test {
 
         #[component(render_fn = some_button)]
         pub struct SomeButton<
-            FClickCallback: Fn(dominator::events::Click) -> () = fn(dominator::events::Click) -> (),
+            FClickCallback: Fn(dominator::events::Click) = fn(dominator::events::Click) -> (),
             T: ToString + Default = i32,
             U: PrimInt + ToString + Default = i32,
         > {
@@ -127,11 +127,7 @@ mod test {
         }
 
         async fn _r(p: impl DefaultValPropsTrait) {
-            let DefaultValProps {
-                foo: _,
-                bar,
-                baz,
-            } = p.take();
+            let DefaultValProps { foo: _, bar, baz } = p.take();
             assert_eq!(bar.to_i32().unwrap(), 123);
 
             let mut vec_val = vec![];

@@ -3,10 +3,10 @@ mod render;
 
 use crate::parse::parse_field::parse_field;
 use crate::parse::AttributeArgument;
-use crate::parse::{Component, Prop, PropGenerics};
+use crate::parse::{Component, PropGenerics};
 use crate::render::render_props;
 use proc_macro::TokenStream;
-use syn::{GenericArgument, Ident, Meta, PathArguments, Type, TypeParam};
+use syn::{GenericArgument, Meta, PathArguments, Type};
 
 /// This attribute macro is meant to simplify making components using `futures-signals` for their properties.
 /// It lets you declare your components inputs in form of a normal, attribute annotated rust struct.
@@ -173,7 +173,7 @@ pub fn component(args: TokenStream, input: TokenStream) -> TokenStream {
         .iter()
         .map(|field| parse_field(field, &struct_generics));
 
-    let mut cmp: Component = Component {
+    let cmp: Component = Component {
         name: struct_.ident,
         render_fn: arg.fn_name,
         props: fields.collect(),
