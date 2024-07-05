@@ -90,7 +90,7 @@ mod test {
     }
 
     // just here to make sure it compiles (it's the example from the readme)
-    fn _my_app(label: impl Signal<Item = String> + 'static) -> Dom {
+    fn _my_app(label: impl Signal<Item=String> + 'static) -> Dom {
         some_button!({
             .label_signal(label)
             .foo(42)
@@ -127,7 +127,7 @@ mod test {
         }
 
         async fn _r(p: impl DefaultValPropsTrait) {
-            let DefaultValProps { foo: _, bar, baz } = p.take();
+            let DefaultValProps { foo: _, bar, baz, .. } = p.take();
             assert_eq!(bar.to_i32().unwrap(), 123);
 
             let mut vec_val = vec![];
@@ -139,7 +139,7 @@ mod test {
 
                 async {}
             })
-            .await;
+                .await;
 
             assert_eq!(vec_val, vec![123, 666]);
         }
