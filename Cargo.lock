@@ -108,7 +108,7 @@ dependencies = [
 
 [[package]]
 name = "futures-signals-component-macro"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "convert_case",
  "dominator",
