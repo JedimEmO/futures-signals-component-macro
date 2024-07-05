@@ -174,7 +174,7 @@ pub fn component(args: TokenStream, input: TokenStream) -> TokenStream {
         .iter()
         .map(|field| parse_field(field, &struct_generics));
 
-    let mut cmp: Component = Component {
+    let cmp: Component = Component {
         name: struct_.ident,
         render_fn: arg.fn_name,
         props: fields.collect(),
