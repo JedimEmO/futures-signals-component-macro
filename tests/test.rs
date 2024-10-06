@@ -127,7 +127,9 @@ mod test {
         }
 
         async fn _r(p: impl DefaultValPropsTrait) {
-            let DefaultValProps { foo: _, bar, baz } = p.take();
+            let DefaultValProps {
+                foo: _, bar, baz, ..
+            } = p.take();
             assert_eq!(bar.to_i32().unwrap(), 123);
 
             let mut vec_val = vec![];

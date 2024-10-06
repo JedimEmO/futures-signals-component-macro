@@ -64,7 +64,8 @@ use syn::{GenericArgument, Meta, PathArguments, Type};
 ///     let TakeDestructExampleProps {
 ///         optional_string_signal /* this has the type Option<impl Signal<Item=String>> */,
 ///         string_signal /* this has the type impl Signal<Item=String> */
-///     } = props.take();
+/// # , ..
+/// } = props.take();
 /// }
 /// ```
 ///
@@ -181,10 +182,10 @@ pub fn component(args: TokenStream, input: TokenStream) -> TokenStream {
     };
 
     #[cfg(feature = "dominator")]
-    let apply_prop = Prop {
+    let apply_prop = parse::Prop {
         is_signal: None,
-        name: Ident::new("apply", cmp.name.span()),
-        generics: Some(PropGenerics { param: syn::parse_str::<TypeParam>("TApplyFn: FnOnce(dominator::DomBuilder<web_sys::HtmlElement>) -> dominator::DomBuilder<web_sys::HtmlElement> = fn(dominator::DomBuilder<web_sys::HtmlElement>)->dominator::DomBuilder<web_sys::HtmlElement>").expect("failed to parse type param") }),
+        name: syn::Ident::new("apply", cmp.name.span()),
+        generics: Some(PropGenerics { param: syn::parse_str::<syn::TypeParam>("TApplyFn: FnOnce(dominator::DomBuilder<web_sys::HtmlElement>) -> dominator::DomBuilder<web_sys::HtmlElement> = fn(dominator::DomBuilder<web_sys::HtmlElement>)->dominator::DomBuilder<web_sys::HtmlElement>").expect("failed to parse type param") }),
         type_: syn::parse_str::<Type>("TApplyFn").expect("failed to parse type"),
         default: None,
         docs: vec![],
