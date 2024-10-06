@@ -1,0 +1,16 @@
+error[E0277]: `<impl NeedsSendPropsTrait + 'static as NeedsSendPropsTrait>::TNotSend` cannot be sent between threads safely
+  --> tests/build_fail_checks/nosend.rs:19:5
+   |
+19 |     consume_send(don_not_send_me.unwrap());
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `<impl NeedsSendPropsTrait + 'static as NeedsSendPropsTrait>::TNotSend` cannot be sent between threads safely
+   |
+   = help: the trait `Send` is not implemented for `<impl NeedsSendPropsTrait + 'static as NeedsSendPropsTrait>::TNotSend`
+note: required by a bound in `consume_send`
+  --> tests/build_fail_checks/nosend.rs:24:42
+   |
+24 | fn consume_send(_: impl Signal<Item=impl Send>) {}
+   |                                          ^^^^ required by this bound in `consume_send`
+help: introduce a type parameter with a trait bound instead of using `impl Trait`
+   |
+13 | fn render_send<N: NeedsSendPropsTrait + 'static>(props: N) -> i32 where <N as NeedsSendPropsTrait>::TNotSend: Send {
+   |               ++++++++++++++++++++++++++++++++++        ~         ++++++++++++++++++++++++++++++++++++++++++++++++

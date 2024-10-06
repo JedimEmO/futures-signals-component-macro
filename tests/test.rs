@@ -19,7 +19,9 @@ mod test {
 
         #[component(render_fn = some_button)]
         pub struct SomeButton<
-            FClickCallback: Fn(dominator::events::Click) = fn(dominator::events::Click) -> (),
+            FClickCallback: Fn(dominator::events::Click) + Send = fn(
+                dominator::events::Click,
+            ) -> (),
             T: ToString + Default = i32,
             U: PrimInt + ToString + Default = i32,
         > {
@@ -147,5 +149,33 @@ mod test {
         }
 
         default_val!({}).await;
+    }
+
+    #[test]
+    fn verify_send_propagation() {
+        let t = trybuild::TestCases::new();
+
+        t.compile_fail("tests/build_fail_checks/nosend.rs");
+
+        #[component(render_fn = render_send)]
+        struct NeedsSend<T: Send = (), TNotSend: Clone = ()> {
+            #[signal]
+            send_me: T,
+
+            #[signal]
+            don_not_send_me: TNotSend,
+        }
+
+        #[allow(dead_code)]
+        fn render_send(props: impl NeedsSendPropsTrait + 'static) -> i32 {
+            let NeedsSendProps { send_me, .. } = props.take();
+
+            consume_send(send_me.unwrap());
+
+            42
+        }
+
+        #[allow(dead_code)]
+        fn consume_send(_: impl Signal<Item = impl Send>) {}
     }
 }
