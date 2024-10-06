@@ -33,6 +33,7 @@ pub enum SignalType {
 #[derive(Clone)]
 pub struct Prop {
     pub is_signal: Option<SignalType>,
+    pub is_send: bool,
     pub name: Ident,
     pub generics: Option<PropGenerics>,
     pub type_: Type,

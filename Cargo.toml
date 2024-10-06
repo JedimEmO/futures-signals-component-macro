@@ -1,6 +1,6 @@
 [package]
 name = "futures-signals-component-macro"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 authors = ["Mathias Myrland <jedimemo@gmail.com>"]
 keywords = ["reactive", "signal", "frp"]
@@ -23,6 +23,9 @@ proc-macro = true
 name = "futures-signals-component-macro"
 path = "tests/test.rs"
 
+[[example]]
+name = "bevy_haalka"
+
 [dependencies]
 convert_case = "^0.6.0"
 proc-macro2 = "^1.0.63"
@@ -38,3 +41,6 @@ wasm-bindgen-test = { version = "0.3.42" }
 wasm-bindgen-futures = { version = "0.4.42" }
 web-sys = { version = "0.3.69" }
 trybuild = "1.0.99"
+bevy = { version = "0.14.2", features = ["bevy_dev_tools"] }
+bevy_framepace = "0.17.1"
+haalka = { git = "https://github.com/databasedav/haalka.git", rev = "a8d4e502bd3ad2c7901a490b7a5b3de19cb77f91", features = ["bevy_mod_picking", "ui"], default-features = false }
