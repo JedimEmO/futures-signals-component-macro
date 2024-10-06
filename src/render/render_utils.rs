@@ -117,7 +117,7 @@ pub fn get_prop_signal_type_param(
         prop_signal_name(&prop.name)
     };
 
-    let is_send = prop.generics.as_ref().map_or(false, |g| {
+    let is_send = prop.is_send || prop.generics.as_ref().map_or(false, |g| {
         g.param.bounds.iter().any(|v| match v {
             TypeParamBound::Trait(t) => t.path.segments.iter().any(|s| s.ident == "Send"),
             _ => false,

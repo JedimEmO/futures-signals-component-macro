@@ -5,6 +5,7 @@ use syn::Field;
 pub fn parse_field(field: &Field, struct_generics: &Vec<PropGenerics>) -> Prop {
     let is_signal = field.attrs.iter().any(|a| a.path().is_ident("signal"));
     let is_signal_vec = field.attrs.iter().any(|a| a.path().is_ident("signal_vec"));
+    let is_send = field.attrs.iter().any(|a| a.path().is_ident("send"));
 
     let default = field
         .attrs
@@ -44,6 +45,7 @@ pub fn parse_field(field: &Field, struct_generics: &Vec<PropGenerics>) -> Prop {
         } else {
             None
         },
+        is_send,
         name: field.ident.clone().expect("field must have name"),
         generics,
         type_: field.ty.clone(),
