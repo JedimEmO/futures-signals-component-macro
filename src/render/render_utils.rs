@@ -1,7 +1,7 @@
 use crate::parse::{Component, Prop, SignalType};
 use proc_macro2::Ident;
 use quote::quote;
-use syn::{Type, TypeParam};
+use syn::{Type, TypeParam, TypeParamBound};
 
 pub fn new_prop_signal_name(prop_name: &Ident) -> String {
     format!("T{}SignalNew", prop_name)
@@ -117,10 +117,19 @@ pub fn get_prop_signal_type_param(
         prop_signal_name(&prop.name)
     };
 
+    let is_send = prop.generics.as_ref().map_or(false, |g| {
+        g.param.bounds.iter().any(|v| match v {
+            TypeParamBound::Trait(t) => t.path.segments.iter().any(|s| s.ident == "Send"),
+            _ => false,
+        })
+    });
+
+    let send_suffix = if is_send { " + Send" } else { "" };
+
     match signal_type {
         SignalType::Item => syn::parse_str(
             format!(
-                "{}: futures_signals::signal::Signal<Item={}>",
+                "{}: futures_signals::signal::Signal<Item={}> {send_suffix}",
                 signal_name,
                 quote! {#prop_type}
             )
@@ -130,7 +139,7 @@ pub fn get_prop_signal_type_param(
 
         SignalType::Vec => syn::parse_str(
             format!(
-                "{}: futures_signals::signal_vec::SignalVec<Item={}>",
+                "{}: futures_signals::signal_vec::SignalVec<Item={}> {send_suffix}",
                 signal_name,
                 quote! {#prop_type}
             )
