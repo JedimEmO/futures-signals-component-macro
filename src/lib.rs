@@ -174,7 +174,7 @@ pub fn component(args: TokenStream, input: TokenStream) -> TokenStream {
         .iter()
         .map(|field| parse_field(field, &struct_generics));
 
-    let cmp: Component = Component {
+    let mut cmp: Component = Component {
         name: struct_.ident,
         render_fn: arg.fn_name,
         props: fields.collect(),
@@ -184,6 +184,7 @@ pub fn component(args: TokenStream, input: TokenStream) -> TokenStream {
     #[cfg(feature = "dominator")]
     let apply_prop = parse::Prop {
         is_signal: None,
+        is_send: false,
         name: syn::Ident::new("apply", cmp.name.span()),
         generics: Some(PropGenerics { param: syn::parse_str::<syn::TypeParam>("TApplyFn: FnOnce(dominator::DomBuilder<web_sys::HtmlElement>) -> dominator::DomBuilder<web_sys::HtmlElement> = fn(dominator::DomBuilder<web_sys::HtmlElement>)->dominator::DomBuilder<web_sys::HtmlElement>").expect("failed to parse type param") }),
         type_: syn::parse_str::<Type>("TApplyFn").expect("failed to parse type"),
