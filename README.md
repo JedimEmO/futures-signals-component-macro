@@ -7,7 +7,7 @@ Here's an example of how to create a component (in this case the output is a [DO
 
 ```rust
 #[component(render_fn = some_button)]
-pub struct SomeButton<T:  + Default = i32, U: ToI32 + ToString + Default = i32> {
+pub struct SomeButton {
     /// The button label. This can be a signal, which allows us to update the label dynamically based on state changes
     /// The macro also generates a setter for a non-signal setter, in case we just want to assign a static value to the property
     #[signal]
