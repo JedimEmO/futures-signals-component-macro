@@ -14,7 +14,7 @@ pub struct SomeButton {
     pub label: String,
     
     #[signal]
-    pub foo: dyn ToString + Send + 'static,
+    pub foo: dyn ToString + 'static,
 
     #[signal_vec]
     #[default(vec![123])]
@@ -35,7 +35,7 @@ pub fn some_button(props: impl SomeButtonPropsTrait + 'static) -> Dom {
 To use this component, you can then use the generated `some_button!` macro, like so:
 
 ```rust
-fn my_app(label: impl Signal<Item=String> + Send + 'static) -> Dom {
+fn my_app(label: impl Signal<Item=String> + 'static) -> Dom {
     some_button!({
         .label_signal(label)
         .foo(42)

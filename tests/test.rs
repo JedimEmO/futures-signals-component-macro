@@ -9,7 +9,6 @@ mod test {
     use futures_signals::signal_vec::SignalVecExt;
     use futures_signals::signal_vec::VecDiff;
     use futures_signals_component_macro::component;
-    
 
     #[macro_use]
     pub mod foo {
