@@ -7,7 +7,6 @@ use syn::{Token, Type, TypeImplTrait};
 
 pub fn render_prop_impl(props_struct_name: &Ident, prop: &Prop, cmp: &Component) -> TokenStream {
     let prop_name = &prop.name;
-    let ty_ = prop.type_.clone();
 
     // If this is a dyn T object, convert it to impl T, otherwise transparent
     let arg_type = match prop.type_.clone() {
