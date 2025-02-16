@@ -154,9 +154,9 @@ pub fn component(args: TokenStream, input: TokenStream) -> TokenStream {
         _ => panic!("struct must have named fields"),
     };
 
-    let fields = fields.iter().map(|field| parse_field(field));
+    let fields = fields.iter().map(parse_field);
 
-    let mut cmp: Component = Component {
+    let cmp: Component = Component {
         name: struct_.ident,
         render_fn: arg.fn_name,
         props: fields.collect(),

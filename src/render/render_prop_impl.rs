@@ -58,7 +58,6 @@ pub fn render_prop_impl(props_struct_name: &Ident, prop: &Prop, cmp: &Component)
         }
     });
 
-    //TODO: Handle box signal and dyn objects setters (extract trait object type and use impl for setter flexibility)
     if prop.is_signal.is_some() {
         let props_signal_fn_name = match prop.is_signal.as_ref().unwrap() {
             SignalType::Item => syn::parse_str::<Ident>(format!("{}_signal", prop.name).as_str())
@@ -79,18 +78,30 @@ pub fn render_prop_impl(props_struct_name: &Ident, prop: &Prop, cmp: &Component)
             SignalType::Vec => quote! {impl Into<Vec<#value_type>>},
         };
 
+        let send_constraint = if prop.is_send {
+            quote! { + Send }
+        } else {
+            quote! {}
+        };
+
         let signal_type = match prop.is_signal.as_ref().unwrap() {
             SignalType::Item => {
-                quote! {impl futures_signals::signal::Signal<Item=#value_type> + Send + 'static}
+                quote! {impl futures_signals::signal::Signal<Item=#value_type> #send_constraint + 'static}
             }
             SignalType::Vec => {
-                quote! {impl futures_signals::signal_vec::SignalVec<Item=#value_type> + Send + 'static}
+                quote! {impl futures_signals::signal_vec::SignalVec<Item=#value_type> #send_constraint + 'static}
             }
         };
 
         let vec_into = match prop.is_signal.as_ref() {
             Some(SignalType::Vec) => quote! { .into() },
             _ => quote! {},
+        };
+
+        let box_statement = if prop.is_send {
+            quote! { let v = v.boxed(); }
+        } else {
+            quote! { let v = v.boxed_local(); }
         };
 
         quote! {
@@ -105,7 +116,7 @@ pub fn render_prop_impl(props_struct_name: &Ident, prop: &Prop, cmp: &Component)
                     use futures_signals::signal::SignalExt;
                     use futures_signals::signal_vec::SignalVecExt;
 
-                    let v = v.boxed();
+                    #box_statement
 
                     #props_struct_name {
                         #prop_name: #value_assign_expr,

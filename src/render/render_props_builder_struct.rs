@@ -27,9 +27,19 @@ pub fn render_prop_builder_struct(props_struct_name: Ident, cmp: &Component) -> 
 
             if let Some(sig) = &prop.is_signal {
                 match sig {
-                    SignalType::Item => quote! {futures_signals::signal::always(#default).boxed()},
+                    SignalType::Item => {
+                        if prop.is_send {
+                            quote! {futures_signals::signal::always(#default).boxed()}
+                        } else {
+                            quote! {futures_signals::signal::always(#default).boxed_local()}
+                        }
+                    }
                     SignalType::Vec => {
-                        quote! {futures_signals::signal_vec::always(#default).boxed()}
+                        if prop.is_send {
+                            quote! {futures_signals::signal_vec::always(#default).boxed()}
+                        } else {
+                            quote! {futures_signals::signal_vec::always(#default).boxed_local()}
+                        }
                     }
                 }
             } else {

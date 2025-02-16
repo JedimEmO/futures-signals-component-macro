@@ -1,15 +1,7 @@
 use crate::parse::{Prop, SignalType};
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Type, TypeParam};
-
-pub fn new_prop_signal_name(prop_name: &Ident) -> String {
-    format!("T{}SignalNew", prop_name)
-}
-
-pub fn prop_signal_name(prop_name: &Ident) -> String {
-    format!("T{}Signal", prop_name)
-}
+use syn::{Type, TypePath};
 
 pub fn compute_prop_type_ident(prop: &Prop) -> TokenStream {
     let value_type = match &prop.type_ {
@@ -21,10 +13,18 @@ pub fn compute_prop_type_ident(prop: &Prop) -> TokenStream {
 
     match prop.is_signal {
         Some(SignalType::Vec) => {
-            quote! {futures_signals::signal_vec::BoxSignalVec<'static, #value_type>}
+            if prop.is_send {
+                quote! {futures_signals::signal_vec::BoxSignalVec<'static, #value_type>}
+            } else {
+                quote! {futures_signals::signal_vec::LocalBoxSignalVec<'static, #value_type>}
+            }
         }
         Some(SignalType::Item) => {
-            quote! {futures_signals::signal::BoxSignal<'static, #value_type>}
+            if prop.is_send {
+                quote! { futures_signals::signal::BoxSignal<'static, #value_type> }
+            } else {
+                quote! { futures_signals::signal::LocalBoxSignal<'static, #value_type> }
+            }
         }
         _ => quote! { #value_type },
     }
@@ -34,23 +34,14 @@ pub fn get_prop_signal_type_param(
     prop: &Prop,
     signal_type: &SignalType,
     prop_type: &Type,
-    is_new: bool,
-) -> TypeParam {
-    let signal_name = if is_new {
-        new_prop_signal_name(&prop.name)
-    } else {
-        prop_signal_name(&prop.name)
-    };
-
+) -> TypePath {
     let is_send = prop.is_send;
-
     let send_suffix = if is_send { " + Send" } else { "" };
 
     match signal_type {
         SignalType::Item => syn::parse_str(
             format!(
-                "{}: futures_signals::signal::Signal<Item={}> {send_suffix}",
-                signal_name,
+                "futures_signals::signal::Signal<Item={}> {send_suffix}",
                 quote! {#prop_type}
             )
             .as_str(),
@@ -59,8 +50,7 @@ pub fn get_prop_signal_type_param(
 
         SignalType::Vec => syn::parse_str(
             format!(
-                "{}: futures_signals::signal_vec::SignalVec<Item={}> {send_suffix}",
-                signal_name,
+                "futures_signals::signal_vec::SignalVec<Item={}> {send_suffix}",
                 quote! {#prop_type}
             )
             .as_str(),

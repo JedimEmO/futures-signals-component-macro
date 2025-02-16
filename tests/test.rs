@@ -9,13 +9,12 @@ mod test {
     use futures_signals::signal_vec::SignalVecExt;
     use futures_signals::signal_vec::VecDiff;
     use futures_signals_component_macro::component;
-    use num_traits::{PrimInt, ToPrimitive};
+    
 
     #[macro_use]
     pub mod foo {
         use dominator::{html, Dom};
         use futures_signals_component_macro::component;
-        use num_traits::PrimInt;
 
         #[component(render_fn = some_button)]
         pub struct SomeButton {
@@ -23,14 +22,14 @@ mod test {
             #[signal]
             pub label: String,
 
-            pub click_handler: dyn Fn(dominator::events::Click) + Send + 'static,
+            pub click_handler: dyn Fn(dominator::events::Click) + 'static,
 
             #[signal]
             #[default("hello".to_string())]
             pub signal_with_default: String,
 
             #[signal]
-            pub foo: dyn ToString + Send + 'static,
+            pub foo: dyn ToString + 'static,
 
             #[signal_vec]
             #[default(vec ! [123])]
@@ -94,7 +93,7 @@ mod test {
     fn attr_cmp_test() {
         let t = SomeButtonProps::new();
 
-        let foo: Box<dyn ToString + Send + 'static> = Box::new("test".to_string());
+        let foo: Box<dyn ToString + 'static> = Box::new("test".to_string());
 
         let _t = t
             .foo_signal(always(foo))
