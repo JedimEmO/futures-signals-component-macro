@@ -80,13 +80,17 @@ pub fn render_prop_impl(props_struct_name: &Ident, prop: &Prop, cmp: &Component)
         };
 
         let signal_type = match prop.is_signal.as_ref().unwrap() {
-            SignalType::Item => quote! {impl futures_signals::signal::Signal<Item=#value_type> + Send + 'static},
-            SignalType::Vec => quote! {impl futures_signals::signal_vec::SignalVec<Item=#value_type> + Send + 'static},
+            SignalType::Item => {
+                quote! {impl futures_signals::signal::Signal<Item=#value_type> + Send + 'static}
+            }
+            SignalType::Vec => {
+                quote! {impl futures_signals::signal_vec::SignalVec<Item=#value_type> + Send + 'static}
+            }
         };
 
         let vec_into = match prop.is_signal.as_ref() {
-            Some(SignalType::Vec) => quote!{ .into() },
-            _ => quote!{}
+            Some(SignalType::Vec) => quote! { .into() },
+            _ => quote! {},
         };
 
         quote! {

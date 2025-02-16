@@ -23,7 +23,7 @@ mod test {
             #[signal]
             pub label: String,
 
-            pub click_handler: dyn Fn(dominator::events::Click) + Send  + 'static,
+            pub click_handler: dyn Fn(dominator::events::Click) + Send + 'static,
 
             #[signal]
             #[default("hello".to_string())]
