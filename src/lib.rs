@@ -168,8 +168,7 @@ pub fn component(args: TokenStream, input: TokenStream) -> TokenStream {
         is_signal: None,
         is_send: false,
         name: syn::Ident::new("apply", cmp.name.span()),
-        generics: Some(PropGenerics { param: syn::parse_str::<syn::TypeParam>("TApplyFn: FnOnce(dominator::DomBuilder<web_sys::HtmlElement>) -> dominator::DomBuilder<web_sys::HtmlElement> = fn(dominator::DomBuilder<web_sys::HtmlElement>)->dominator::DomBuilder<web_sys::HtmlElement>").expect("failed to parse type param") }),
-        type_: syn::parse_str::<Type>("TApplyFn").expect("failed to parse type"),
+        type_: syn::parse_str::<Type>("dyn FnOnce(dominator::DomBuilder<web_sys::HtmlElement>) -> dominator::DomBuilder<web_sys::HtmlElement> + Send + 'static").expect("failed to parse type"),
         default: None,
         docs: vec![],
     };
