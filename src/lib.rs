@@ -3,10 +3,10 @@ mod render;
 
 use crate::parse::parse_field::parse_field;
 use crate::parse::AttributeArgument;
-use crate::parse::{Component, PropGenerics};
+use crate::parse::Component;
 use crate::render::render_props;
 use proc_macro::TokenStream;
-use syn::{GenericArgument, Meta, PathArguments, Type};
+use syn::Meta;
 
 /// This attribute macro is meant to simplify making components using `futures-signals` for their properties.
 /// It lets you declare your components inputs in form of a normal, attribute annotated rust struct.
@@ -60,12 +60,12 @@ use syn::{GenericArgument, Meta, PathArguments, Type};
 ///     string_signal: String,
 /// }
 ///
-/// fn take_destruct_example(props: impl TakeDestructExamplePropsTrait + 'static) {
+/// fn take_destruct_example(props: TakeDestructExampleProps) {
 ///     let TakeDestructExampleProps {
 ///         optional_string_signal /* this has the type Option<impl Signal<Item=String>> */,
 ///         string_signal /* this has the type impl Signal<Item=String> */
 /// # , ..
-/// } = props.take();
+/// } = props;
 /// }
 /// ```
 ///
@@ -83,27 +83,23 @@ use syn::{GenericArgument, Meta, PathArguments, Type};
 /// # use futures_signals_component_macro::component;
 /// # use num_traits::PrimInt;
 /// #[component(render_fn = some_button)]
-/// pub struct SomeButton<FClickCallback: Fn(dominator::events::Click) -> () = fn(dominator::events::Click) -> (), T: ToString + Default = i32, U: PrimInt + Default = i32> {
+/// pub struct SomeButton {
 ///     #[signal]
 ///     pub label: String,
 ///
-///     pub click_handler: FClickCallback,
+///     pub click_handler: dyn Fn(dominator::events::Click) -> () + Send + 'static,
 ///
 ///     pub boxed_click_handler: Box<dyn Fn(dominator::events::Click) -> ()>,
 ///
 ///     #[signal]
-///     pub foo: T,
-///
-///     #[signal]
-///     pub bar: U,
-///
+///     pub foo: dyn ToString + Send + 'static,
 ///     #[signal_vec]
 ///     #[default(vec ! [123])]
 ///     pub some_generic_signal_vec: i32,
 /// }
 ///
-/// pub fn some_button(props: impl SomeButtonPropsTrait + 'static) -> Dom {
-///     let SomeButtonProps { label, click_handler, boxed_click_handler, .. } = props.take();
+/// pub fn some_button(props: SomeButtonProps) -> Dom {
+///     let SomeButtonProps { label, click_handler, boxed_click_handler, .. } = props;
 ///
 ///     html!("div", {
 ///         .apply_if(click_handler.is_some(), move |b| {
@@ -125,7 +121,7 @@ use syn::{GenericArgument, Meta, PathArguments, Type};
 /// }
 ///
 /// // Usage
-/// fn my_app(label: impl Signal<Item=String> + 'static) -> Dom {
+/// fn my_app(label: impl Signal<Item=String> + Send + 'static) -> Dom {
 ///     some_button!({
 ///         .label_signal(label)
 ///         .foo(42)
@@ -158,23 +154,18 @@ pub fn component(args: TokenStream, input: TokenStream) -> TokenStream {
         _ => panic!("struct must have named fields"),
     };
 
-    let struct_generics = struct_
-        .generics
-        .params
-        .iter()
-        .map(|param| match param {
-            syn::GenericParam::Type(type_param) => PropGenerics {
-                param: type_param.clone(),
-            },
-            _ => panic!("prop struct must have only type params"),
-        })
-        .collect::<Vec<_>>();
+    let fields = fields.iter().map(parse_field);
 
-    let fields = fields
-        .iter()
-        .map(|field| parse_field(field, &struct_generics));
-
+    #[cfg(feature = "dominator")]
     let mut cmp: Component = Component {
+        name: struct_.ident,
+        render_fn: arg.fn_name,
+        props: fields.collect(),
+        docs,
+    };
+
+    #[cfg(not(feature = "dominator"))]
+    let cmp: Component = Component {
         name: struct_.ident,
         render_fn: arg.fn_name,
         props: fields.collect(),
@@ -186,8 +177,7 @@ pub fn component(args: TokenStream, input: TokenStream) -> TokenStream {
         is_signal: None,
         is_send: false,
         name: syn::Ident::new("apply", cmp.name.span()),
-        generics: Some(PropGenerics { param: syn::parse_str::<syn::TypeParam>("TApplyFn: FnOnce(dominator::DomBuilder<web_sys::HtmlElement>) -> dominator::DomBuilder<web_sys::HtmlElement> = fn(dominator::DomBuilder<web_sys::HtmlElement>)->dominator::DomBuilder<web_sys::HtmlElement>").expect("failed to parse type param") }),
-        type_: syn::parse_str::<Type>("TApplyFn").expect("failed to parse type"),
+        type_: syn::parse_str::<syn::Type>("dyn FnOnce(dominator::DomBuilder<web_sys::HtmlElement>) -> dominator::DomBuilder<web_sys::HtmlElement> + 'static").expect("failed to parse type"),
         default: None,
         docs: vec![],
     };
@@ -196,45 +186,4 @@ pub fn component(args: TokenStream, input: TokenStream) -> TokenStream {
     cmp.props.push(apply_prop);
 
     render_props(&cmp).into()
-}
-
-fn get_type_generic_param_use(
-    type_: &Type,
-    struct_generics: &Vec<PropGenerics>,
-) -> Vec<PropGenerics> {
-    let mut out = vec![];
-
-    if let Type::Path(type_path) = &type_ {
-        for segment in &type_path.path.segments {
-            if let Some(generic) = struct_generics
-                .iter()
-                .find(|generic| segment.ident == generic.param.ident)
-            {
-                out.push(generic.clone());
-            }
-
-            if let PathArguments::AngleBracketed(angle_bracketed_arguments) = &segment.arguments {
-                for argument in &angle_bracketed_arguments.args {
-                    match &argument {
-                        GenericArgument::Type(Type::Path(generic_type)) => {
-                            for segment in generic_type.path.segments.iter() {
-                                if let Some(generic) = struct_generics
-                                    .iter()
-                                    .find(|generic| segment.ident == generic.param.ident)
-                                {
-                                    out.push(generic.clone());
-                                }
-                            }
-                        }
-                        GenericArgument::Type(type_) => {
-                            out.append(&mut get_type_generic_param_use(type_, struct_generics));
-                        }
-                        _ => {}
-                    }
-                }
-            }
-        }
-    }
-
-    out
 }

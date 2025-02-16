@@ -3,7 +3,7 @@ pub mod parse_field;
 use proc_macro2::Ident;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
-use syn::{Attribute, Expr, Meta, Token, Type, TypeParam};
+use syn::{Attribute, Expr, Meta, Token, Type};
 
 pub struct AttributeArgument {
     #[allow(dead_code)]
@@ -11,17 +11,6 @@ pub struct AttributeArgument {
     #[allow(dead_code)]
     pub eq: Token![=],
     pub fn_name: Ident,
-}
-
-#[derive(Clone)]
-pub struct PropGenerics {
-    pub param: TypeParam,
-}
-
-impl PartialEq for PropGenerics {
-    fn eq(&self, other: &Self) -> bool {
-        self.param.ident == other.param.ident
-    }
 }
 
 #[derive(Clone)]
@@ -35,7 +24,6 @@ pub struct Prop {
     pub is_signal: Option<SignalType>,
     pub is_send: bool,
     pub name: Ident,
-    pub generics: Option<PropGenerics>,
     pub type_: Type,
     pub default: Option<syn::Expr>,
     pub docs: Vec<Expr>,

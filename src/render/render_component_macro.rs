@@ -48,7 +48,7 @@ fn create_generated_macro_docs_section(cmp: &Component, macro_name: &Ident) -> T
             match signal {
                 SignalType::Item => {
                     doc_strings.push(format!("    .{}(<{}>)", prop.name, quote! {#ty_}));
-                    let ty_ = get_prop_signal_type_param(prop, signal, ty_, false);
+                    let ty_ = get_prop_signal_type_param(prop, signal, ty_);
                     doc_strings.push(format!("    .{}_signal(<{}>)", prop.name, quote! {#ty_}));
                 }
                 SignalType::Vec => {
@@ -57,7 +57,7 @@ fn create_generated_macro_docs_section(cmp: &Component, macro_name: &Ident) -> T
                         prop.name,
                         quote! {#ty_}
                     ));
-                    let ty_ = get_prop_signal_type_param(prop, signal, ty_, false);
+                    let ty_ = get_prop_signal_type_param(prop, signal, ty_);
                     doc_strings.push(format!(
                         "    .{}_signal_vec(<{}>)",
                         prop.name,
