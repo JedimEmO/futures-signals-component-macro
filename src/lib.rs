@@ -156,6 +156,15 @@ pub fn component(args: TokenStream, input: TokenStream) -> TokenStream {
 
     let fields = fields.iter().map(parse_field);
 
+    #[cfg(feature = "dominator")]
+    let mut cmp: Component = Component {
+        name: struct_.ident,
+        render_fn: arg.fn_name,
+        props: fields.collect(),
+        docs,
+    };
+
+    #[cfg(not(feature = "dominator"))]
     let cmp: Component = Component {
         name: struct_.ident,
         render_fn: arg.fn_name,
