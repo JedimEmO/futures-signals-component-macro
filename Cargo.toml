@@ -15,7 +15,6 @@ resolver = "2"
 [features]
 
 dominator = ["dep:dominator"]
-bevy_example = ["bevy", "bevy_framepace", "haalka"]
 
 [lib]
 proc-macro = true
@@ -24,10 +23,6 @@ proc-macro = true
 name = "futures-signals-component-macro"
 path = "tests/test.rs"
 
-[[example]]
-name = "bevy_haalka"
-required-features = ["bevy_example"]
-
 [dependencies]
 convert_case = "^0.6.0"
 proc-macro2 = "^1.0.63"
@@ -35,17 +30,11 @@ syn = { version = "^2.0.22", features = ["full"] }
 quote = "^1.0.29"
 dominator = { version = "^0.5.34", optional = true }
 
-# Example dependencies
-bevy = { version = "0.13.2", optional = true }
-bevy_framepace = { version = "0.17.1", optional = true }
-haalka = { version = "0.1.1", features = ["bevy_mod_picking", "ui"], default-features = false, optional = true }
-
 [dev-dependencies]
 num-traits = "0.2.19"
 dominator = { version = "0.5.34" }
 futures-signals = { version = "0.3.33" }
-wasm-bindgen-test = { version = "0.3.42" }
+wasm-bindgen-test = { version = "0.3.50" }
 wasm-bindgen-futures = { version = "0.4.42" }
 web-sys = { version = "0.3.69" }
-trybuild = "1.0.99"
 

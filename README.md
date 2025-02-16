@@ -7,17 +7,14 @@ Here's an example of how to create a component (in this case the output is a [DO
 
 ```rust
 #[component(render_fn = some_button)]
-pub struct SomeButton<T: ToString + Default = i32, U: ToI32 + ToString + Default = i32> {
+pub struct SomeButton<T:  + Default = i32, U: ToI32 + ToString + Default = i32> {
     /// The button label. This can be a signal, which allows us to update the label dynamically based on state changes
     /// The macro also generates a setter for a non-signal setter, in case we just want to assign a static value to the property
     #[signal]
     pub label: String,
     
     #[signal]
-    pub foo: T,
-
-    #[signal]
-    pub bar: U,
+    pub foo: dyn ToString + Send + 'static,
 
     #[signal_vec]
     #[default(vec![123])]
@@ -38,7 +35,7 @@ pub fn some_button(props: impl SomeButtonPropsTrait + 'static) -> Dom {
 To use this component, you can then use the generated `some_button!` macro, like so:
 
 ```rust
-fn my_app(label: impl Signal<Item=String> + 'static) -> Dom {
+fn my_app(label: impl Signal<Item=String> + Send + 'static) -> Dom {
     some_button!({
         .label_signal(label)
         .foo(42)

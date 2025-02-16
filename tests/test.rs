@@ -18,28 +18,19 @@ mod test {
         use num_traits::PrimInt;
 
         #[component(render_fn = some_button)]
-        pub struct SomeButton<
-            FClickCallback: Fn(dominator::events::Click) + Send = fn(
-                dominator::events::Click,
-            ) -> (),
-            T: ToString + Default = i32,
-            U: PrimInt + ToString + Default = i32,
-        > {
+        pub struct SomeButton {
             /// The button label. This can be a signal, which allows us to update the label dynamically based on state changes
             #[signal]
             pub label: String,
 
-            pub click_handler: FClickCallback,
+            pub click_handler: dyn Fn(dominator::events::Click) + Send  + 'static,
 
             #[signal]
             #[default("hello".to_string())]
             pub signal_with_default: String,
 
             #[signal]
-            pub foo: T,
-
-            #[signal]
-            pub bar: U,
+            pub foo: dyn ToString + Send + 'static,
 
             #[signal_vec]
             #[default(vec ! [123])]
@@ -52,13 +43,13 @@ mod test {
             pub unchanging_prop: i32,
         }
 
-        pub fn some_button(props: impl SomeButtonPropsTrait + 'static) -> Dom {
+        pub fn some_button(props: SomeButtonProps) -> Dom {
             let SomeButtonProps {
                 label,
                 signal_with_default,
                 click_handler,
                 ..
-            } = props.take();
+            } = props;
 
             html!("div", {
                 .apply_if(label.is_some(), |b| {
@@ -79,7 +70,7 @@ mod test {
 
     #[wasm_bindgen_test::wasm_bindgen_test]
     fn cmp_non_macro_test() {
-        let _rendered: Dom = some_button(SomeButtonProps::new().foo("hi there").bar(42));
+        let _rendered: Dom = some_button(SomeButtonProps::new().foo("hi there"));
     }
 
     #[wasm_bindgen_test::wasm_bindgen_test]
@@ -92,7 +83,7 @@ mod test {
     }
 
     // just here to make sure it compiles (it's the example from the readme)
-    fn _my_app(label: impl Signal<Item = String> + 'static) -> Dom {
+    fn _my_app(label: impl Signal<Item = String> + Send + 'static) -> Dom {
         some_button!({
             .label_signal(label)
             .foo(42)
@@ -103,10 +94,11 @@ mod test {
     fn attr_cmp_test() {
         let t = SomeButtonProps::new();
 
+        let foo: Box<dyn ToString + Send + 'static> = Box::new("test".to_string());
+
         let _t = t
-            .foo_signal(always("test".to_string()))
+            .foo_signal(always(foo))
             .foo(32)
-            .bar(666)
             .label("hi".to_string())
             .label_signal(always("test".to_string()))
             .some_generic_signal_vec_signal_vec(futures_signals::signal_vec::always(vec![42, 666]));
@@ -115,24 +107,24 @@ mod test {
     #[wasm_bindgen_test::wasm_bindgen_test]
     async fn default_val_test() {
         #[component(render_fn = _r)]
-        struct DefaultVal<T: PrimInt = i32> {
+        struct DefaultVal {
             #[signal]
             #[default(666)]
             foo: i32,
 
-            #[default(123)]
-            bar: T,
+            #[default(Box::new("123"))]
+            bar: dyn ToString + 'static,
 
             #[signal_vec]
             #[default(vec ! [123, 666])]
             baz: i32,
         }
 
-        async fn _r(p: impl DefaultValPropsTrait) {
+        async fn _r(p: DefaultValProps) {
             let DefaultValProps {
                 foo: _, bar, baz, ..
-            } = p.take();
-            assert_eq!(bar.to_i32().unwrap(), 123);
+            } = p;
+            assert_eq!(bar.to_string(), "123");
 
             let mut vec_val = vec![];
 
@@ -149,33 +141,5 @@ mod test {
         }
 
         default_val!({}).await;
-    }
-
-    #[test]
-    fn verify_send_propagation() {
-        let t = trybuild::TestCases::new();
-
-        t.compile_fail("tests/build_fail_checks/nosend.rs");
-
-        #[component(render_fn = render_send)]
-        struct NeedsSend<T: Send = (), TNotSend: Clone = ()> {
-            #[signal]
-            send_me: T,
-
-            #[signal]
-            don_not_send_me: TNotSend,
-        }
-
-        #[allow(dead_code)]
-        fn render_send(props: impl NeedsSendPropsTrait + 'static) -> i32 {
-            let NeedsSendProps { send_me, .. } = props.take();
-
-            consume_send(send_me.unwrap());
-
-            42
-        }
-
-        #[allow(dead_code)]
-        fn consume_send(_: impl Signal<Item = impl Send>) {}
     }
 }
