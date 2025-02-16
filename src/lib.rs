@@ -177,7 +177,7 @@ pub fn component(args: TokenStream, input: TokenStream) -> TokenStream {
         is_signal: None,
         is_send: false,
         name: syn::Ident::new("apply", cmp.name.span()),
-        type_: syn::parse_str::<syn::Type>("dyn FnOnce(dominator::DomBuilder<web_sys::HtmlElement>) -> dominator::DomBuilder<web_sys::HtmlElement> + Send + 'static").expect("failed to parse type"),
+        type_: syn::parse_str::<syn::Type>("dyn FnOnce(dominator::DomBuilder<web_sys::HtmlElement>) -> dominator::DomBuilder<web_sys::HtmlElement> + 'static").expect("failed to parse type"),
         default: None,
         docs: vec![],
     };
