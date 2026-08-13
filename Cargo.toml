@@ -24,10 +24,6 @@ proc-macro = true
 name = "futures-signals-component-macro"
 path = "tests/test.rs"
 
-[[test]]
-name = "trybuild"
-path = "tests/trybuild.rs"
-
 [dependencies]
 convert_case = "^0.6.0"
 proc-macro2 = "^1.0.63"
@@ -37,7 +33,6 @@ dominator = { version = "^0.5.34", optional = true }
 
 [dev-dependencies]
 num-traits = "0.2.19"
-trybuild = "1"
 dominator = { version = "0.5.34" }
 futures-signals = { version = "0.3.33" }
 wasm-bindgen-test = { version = "0.3.50" }

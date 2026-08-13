@@ -1,5 +1,0 @@
-error: `#[required]` and `#[default(...)]` are contradictory; a required prop must be provided by the caller
- --> tests/ui/required_with_default.rs:5:5
-  |
-5 |     #[required]
-  |     ^

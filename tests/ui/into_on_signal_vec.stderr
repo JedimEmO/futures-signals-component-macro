@@ -1,5 +1,0 @@
-error: `#[into]` is not supported on `#[signal_vec]` props; the value setter already accepts `impl Into<Vec<T>>`
- --> tests/ui/into_on_signal_vec.rs:5:5
-  |
-5 |     #[signal_vec]
-  |     ^

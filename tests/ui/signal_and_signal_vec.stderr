@@ -1,5 +1,0 @@
-error: field cannot be both signal and signal_vec
- --> tests/ui/signal_and_signal_vec.rs:5:5
-  |
-5 |     #[signal]
-  |     ^

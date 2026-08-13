@@ -205,6 +205,111 @@ use syn::Meta;
 ///     })
 /// }
 /// ```
+/// Compile-fail coverage, expressed as `compile_fail` doctests: each case asserts only that
+/// the code does not compile (with the expected error code where one exists), so there are no
+/// diagnostic-string snapshots to maintain across rustc versions. The macro-invocation
+/// missing-required-prop case lives in the `#[required]` section of the [`component`] docs.
+#[cfg(doctest)]
+mod compile_fail_tests {
+    /// Omitting a required prop through the direct builder chain must not compile:
+    ///
+    /// ```compile_fail,E0277
+    /// use futures_signals_component_macro::component;
+    ///
+    /// #[component(render_fn = my_cmp)]
+    /// struct MyCmp {
+    ///     #[signal]
+    ///     #[required]
+    ///     title: String,
+    ///
+    ///     #[signal]
+    ///     #[default(0)]
+    ///     count: i32,
+    /// }
+    ///
+    /// fn my_cmp(props: MyCmpProps) {
+    ///     let _ = props.title;
+    /// }
+    ///
+    /// // Setting only the optional prop leaves the builder in the missing-title state.
+    /// let _props = MyCmpProps::new().count(4).build();
+    /// ```
+    mod missing_required_prop_direct_build {}
+
+    /// `#[required]` and `#[default]` are contradictory:
+    ///
+    /// ```compile_fail
+    /// use futures_signals_component_macro::component;
+    ///
+    /// #[component(render_fn = my_cmp)]
+    /// struct MyCmp {
+    ///     #[required]
+    ///     #[default(42)]
+    ///     x: i32,
+    /// }
+    /// ```
+    mod required_with_default {}
+
+    /// `#[into]` is rejected on `#[signal_vec]` props (the value setter already takes
+    /// `impl Into<Vec<T>>`):
+    ///
+    /// ```compile_fail
+    /// use futures_signals_component_macro::component;
+    ///
+    /// #[component(render_fn = my_cmp)]
+    /// struct MyCmp {
+    ///     #[signal_vec]
+    ///     #[into]
+    ///     items: i32,
+    /// }
+    /// ```
+    mod into_on_signal_vec {}
+
+    /// `#[into]` is rejected on trait-object props (the setter already takes `impl Trait`):
+    ///
+    /// ```compile_fail
+    /// use futures_signals_component_macro::component;
+    ///
+    /// #[component(render_fn = my_cmp)]
+    /// struct MyCmp {
+    ///     #[into]
+    ///     handler: dyn Fn() + 'static,
+    /// }
+    /// ```
+    mod into_on_trait_object {}
+
+    /// A field cannot be both `#[signal]` and `#[signal_vec]`:
+    ///
+    /// ```compile_fail
+    /// use futures_signals_component_macro::component;
+    ///
+    /// #[component(render_fn = my_cmp)]
+    /// struct MyCmp {
+    ///     #[signal]
+    ///     #[signal_vec]
+    ///     x: i32,
+    /// }
+    /// ```
+    mod signal_and_signal_vec {}
+
+    /// The field name `build` is reserved on components with required props, because it
+    /// would collide with the generated builder finalizer:
+    ///
+    /// ```compile_fail
+    /// use futures_signals_component_macro::component;
+    ///
+    /// #[component(render_fn = my_cmp)]
+    /// struct MyCmp {
+    ///     #[signal]
+    ///     #[required]
+    ///     title: String,
+    ///
+    ///     build: i32,
+    /// }
+    /// ```
+    mod reserved_build_field {}
+}
+
 #[proc_macro_attribute]
 pub fn component(args: TokenStream, input: TokenStream) -> TokenStream {
     match component_impl(args, input) {
