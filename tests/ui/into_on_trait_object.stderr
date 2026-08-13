@@ -1,0 +1,5 @@
+error: `#[into]` cannot be used on trait-object props; the setter already accepts `impl Trait`
+ --> tests/ui/into_on_trait_object.rs:5:5
+  |
+5 |     #[into]
+  |     ^

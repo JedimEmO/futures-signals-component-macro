@@ -140,4 +140,153 @@ mod test {
 
         default_val!({}).await;
     }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
+    fn required_props_test() {
+        #[component(render_fn = required_cmp)]
+        struct RequiredCmp {
+            #[signal]
+            #[required]
+            title: String,
+
+            #[required]
+            formatter: dyn ToString + 'static,
+
+            #[signal]
+            #[default(0)]
+            count: i32,
+        }
+
+        fn required_cmp(props: RequiredCmpProps) -> String {
+            let RequiredCmpProps { formatter, .. } = props;
+            formatter.to_string()
+        }
+
+        // Required props can be set in any order, via either setter flavor, through the
+        // direct builder chain or the generated macro.
+        let out = required_cmp(
+            RequiredCmpProps::new()
+                .formatter(42)
+                .title("t".to_string())
+                .build(),
+        );
+        assert_eq!(out, "42");
+
+        let out = required_cmp(
+            RequiredCmpProps::new()
+                .count(3)
+                .title_signal(always("t".to_string()))
+                .formatter("str")
+                .build(),
+        );
+        assert_eq!(out, "str");
+
+        let out = required_cmp!({
+            .formatter(7)
+            .title("hi".to_string())
+        });
+        assert_eq!(out, "7");
+    }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
+    fn required_send_signal_test() {
+        #[component(render_fn = send_cmp)]
+        struct SendCmp {
+            #[signal]
+            #[send]
+            #[required]
+            label: String,
+        }
+
+        fn send_cmp(props: SendCmpProps) -> impl Signal<Item = String> + Send {
+            props.label
+        }
+
+        fn assert_send<T: Send>(_: &T) {}
+
+        let sig = send_cmp(SendCmpProps::new().label("x".to_string()).build());
+        assert_send(&sig);
+    }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
+    fn into_props_test() {
+        #[component(render_fn = into_cmp)]
+        struct IntoCmp {
+            #[signal]
+            #[into]
+            #[default(String::new())]
+            message: String,
+
+            #[into]
+            #[default(None)]
+            opt_label: Option<String>,
+
+            #[into]
+            #[required]
+            id: String,
+        }
+
+        fn into_cmp(props: IntoCmpProps) -> (Option<String>, String) {
+            let IntoCmpProps { opt_label, id, .. } = props;
+            (opt_label, id)
+        }
+
+        // Value setters accept impl Into<T>: &str for a String prop, a bare T for an
+        // Option<T> prop. The _signal setter converts items as they arrive.
+        let (opt, id) = into_cmp(
+            IntoCmpProps::new()
+                .message("hello")
+                .message_signal(always("hi"))
+                .opt_label("maybe".to_string())
+                .id("my-id")
+                .build(),
+        );
+        assert_eq!(opt, Some("maybe".to_string()));
+        assert_eq!(id, "my-id");
+
+        let (opt, _) = into_cmp!({ .id("x") });
+        assert_eq!(opt, None);
+    }
+
+    #[cfg(feature = "dominator")]
+    #[wasm_bindgen_test::wasm_bindgen_test]
+    fn apply_compose_test() {
+        use dominator::html;
+
+        #[component(render_fn = apply_cmp)]
+        struct ApplyCmp {}
+
+        fn apply_cmp(props: ApplyCmpProps) -> Dom {
+            let ApplyCmpProps { apply } = props;
+
+            html!("div", {
+                .apply_if(apply.is_some(), |b| b.apply(apply.unwrap()))
+            })
+        }
+
+        // The no-op build() keeps direct builder chains uniform on components without
+        // required props.
+        let _no_apply: Dom = apply_cmp(ApplyCmpProps::new().build());
+
+        let dom = apply_cmp!({
+            .apply(|b| b.attr("data-first", "1").attr("data-winner", "first"))
+            .apply(|b| b.attr("data-second", "2").attr("data-winner", "second"))
+        });
+
+        dominator::append_dom(&dominator::body(), dom);
+
+        let document = web_sys::window().unwrap().document().unwrap();
+        let el = document.query_selector("[data-first]").unwrap().unwrap();
+
+        // Both apply fns ran (composition instead of the 0.4 overwrite), ...
+        assert_eq!(el.get_attribute("data-first").as_deref(), Some("1"));
+        assert_eq!(el.get_attribute("data-second").as_deref(), Some("2"));
+        // ... in call order: the later .apply() runs last and wins conflicting writes.
+        assert_eq!(el.get_attribute("data-winner").as_deref(), Some("second"));
+
+        el.remove();
+    }
 }

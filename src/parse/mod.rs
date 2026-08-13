@@ -23,6 +23,9 @@ pub enum SignalType {
 pub struct Prop {
     pub is_signal: Option<SignalType>,
     pub is_send: bool,
+    pub is_required: bool,
+    pub is_into: bool,
+    pub is_compose_apply: bool,
     pub name: Ident,
     pub type_: Type,
     pub default: Option<syn::Expr>,

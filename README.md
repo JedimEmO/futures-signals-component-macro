@@ -8,11 +8,14 @@ Here's an example of how to create a component (in this case the output is a [DO
 ```rust
 #[component(render_fn = some_button)]
 pub struct SomeButton {
-    /// The button label. This can be a signal, which allows us to update the label dynamically based on state changes
-    /// The macro also generates a setter for a non-signal setter, in case we just want to assign a static value to the property
+    /// The button label. This can be a signal, which allows us to update the label dynamically based on state changes.
+    /// The macro also generates a non-signal setter, in case we just want to assign a static value to the property.
+    /// `#[required]` makes omitting the label a compile error; `#[into]` lets setters accept `&str`.
     #[signal]
+    #[required]
+    #[into]
     pub label: String,
-    
+
     #[signal]
     pub foo: dyn ToString + 'static,
 
@@ -21,12 +24,15 @@ pub struct SomeButton {
     pub some_generic_signal_vec: i32,
 }
 
-pub fn some_button(props: impl SomeButtonPropsTrait + 'static) -> Dom {
-    let SomeButtonProps { label, .. } = props.take();
+pub fn some_button(props: SomeButtonProps) -> Dom {
+    let SomeButtonProps { label, foo, .. } = props;
 
     html!("div", {
-        .apply_if(label.is_some(), |b| {
-            b.text_signal(label.unwrap())
+        // `label` is required, so it arrives as a plain boxed signal — no Option, no unwrap
+        .text_signal(label)
+        // `foo` is optional (no #[default], no #[required]), so it is an Option
+        .apply_if(foo.is_some(), |b| {
+            b.text_signal(foo.unwrap().map(|v| v.to_string()))
         })
     })
 }
@@ -42,6 +48,22 @@ fn my_app(label: impl Signal<Item=String> + 'static) -> Dom {
     })
 }
 ```
+
+Omitting a `#[required]` prop fails to compile with a targeted error, both through the macro and
+through the direct builder chain (`SomeButtonProps::new().foo(42).build()`).
+
+Field attributes:
+
+| Attribute | Effect |
+|---|---|
+| `#[signal]` | Generates `name()` and `name_signal()` setters; stored as a boxed signal |
+| `#[signal_vec]` | Like `#[signal]`, but for `SignalVec` |
+| `#[default(expr)]` | Seeds the prop with `expr`; the prop is stored unwrapped |
+| `#[required]` | The caller must set the prop — enforced at compile time via a typestate builder |
+| `#[into]` | Setters accept `impl Into<T>` (and signals of `Into<T>` items) |
+| `#[send]` | Boxed signal types are `Send` (`BoxSignal` instead of `LocalBoxSignal`) |
+
+Props with none of `#[default]`/`#[required]` are optional and stored as `Option<T>`.
 
 ## Developing and testing
 

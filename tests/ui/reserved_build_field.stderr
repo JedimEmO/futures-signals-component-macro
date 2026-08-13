@@ -1,0 +1,5 @@
+error: the field name `build` is reserved on components with `#[required]` props; it is used by the builder finalizer
+ --> tests/ui/reserved_build_field.rs:9:5
+  |
+9 |     build: i32,
+  |     ^^^^^

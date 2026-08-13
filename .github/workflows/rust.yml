@@ -19,7 +19,8 @@ jobs:
         uses: jetli/wasm-bindgen-action@v0.1.0
         with:
           # Optional version of wasm-bindgen to install (eg. "0.2.68", "latest")
-          version: 0.2.100
+          # Must match the wasm-bindgen version in Cargo.lock
+          version: 0.2.127
       - name: rust-toolchain
         # You may pin to the exact commit or the version.
         # uses: actions-rs/toolchain@b2417cde72dcf67f306c0ae8e0828a81bf0b189f
@@ -30,9 +31,13 @@ jobs:
           target: wasm32-unknown-unknown
       - name: Run chrome tests
         run: RUST_BACKTRACE=1 CHROMEDRIVER=/usr/local/share/chromedriver-linux64/chromedriver cargo test --target wasm32-unknown-unknown
+      - name: Run chrome tests (dominator feature)
+        run: RUST_BACKTRACE=1 CHROMEDRIVER=/usr/local/share/chromedriver-linux64/chromedriver cargo test --target wasm32-unknown-unknown --features dominator
       - name: clippy checks
         run: cargo clippy
       - name: Run unit tests
         run: cargo test
+      - name: Run unit tests (dominator feature)
+        run: cargo test --features dominator
       - name: Code quality
         run: ./verify_code_quality.sh

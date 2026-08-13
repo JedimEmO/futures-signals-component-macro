@@ -1,0 +1,28 @@
+error[E0277]: missing required props for component `my_cmp`
+  --> tests/ui/missing_required_prop.rs:3:1
+   |
+ 3 | #[component(render_fn = my_cmp)]
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ required props: `title` — set each with `.title(...)` before calling `.build()` (the `my_cmp` component macro calls it for you)
+...
+15 |     my_cmp!({});
+   |     ----------- in this macro invocation
+   |
+help: the trait `MyCmpPropsBuilderComplete` is not implemented for `MyCmpPropsBuilder<MyCmpPropsBuilderMissingTitle>`
+  --> tests/ui/missing_required_prop.rs:3:1
+   |
+ 3 | #[component(render_fn = my_cmp)]
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: the builder state is `MyCmpPropsBuilder<MyCmpPropsBuilderMissingTitle>`; each `MyCmpPropsBuilderMissing*` type parameter is a prop that has not been set
+help: the trait `MyCmpPropsBuilderComplete` is implemented for `MyCmpPropsBuilder<Pin<Box<dyn Signal<Item = String>>>>`
+  --> tests/ui/missing_required_prop.rs:3:1
+   |
+ 3 | #[component(render_fn = my_cmp)]
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `MyCmpPropsBuilder::<TTitle>::build`
+  --> tests/ui/missing_required_prop.rs:4:8
+   |
+ 3 | #[component(render_fn = my_cmp)]
+   | -------------------------------- required by a bound in this associated function
+ 4 | struct MyCmp {
+   |        ^^^^^ required by this bound in `MyCmpPropsBuilder::<TTitle>::build`
+   = note: this error originates in the macro `my_cmp` which comes from the expansion of the attribute macro `component` (in Nightly builds, run with -Z macro-backtrace for more info)

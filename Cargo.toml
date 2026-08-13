@@ -1,7 +1,8 @@
 [package]
 name = "futures-signals-component-macro"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
+rust-version = "1.78"
 authors = ["Mathias Myrland <jedimemo@gmail.com>"]
 keywords = ["reactive", "signal", "frp"]
 categories = ["gui", "web-programming", "wasm"]
@@ -23,6 +24,10 @@ proc-macro = true
 name = "futures-signals-component-macro"
 path = "tests/test.rs"
 
+[[test]]
+name = "trybuild"
+path = "tests/trybuild.rs"
+
 [dependencies]
 convert_case = "^0.6.0"
 proc-macro2 = "^1.0.63"
@@ -32,9 +37,15 @@ dominator = { version = "^0.5.34", optional = true }
 
 [dev-dependencies]
 num-traits = "0.2.19"
+trybuild = "1"
 dominator = { version = "0.5.34" }
 futures-signals = { version = "0.3.33" }
 wasm-bindgen-test = { version = "0.3.50" }
 wasm-bindgen-futures = { version = "0.4.42" }
-web-sys = { version = "0.3.69" }
+web-sys = { version = "0.3.69", features = [
+    "Document",
+    "Element",
+    "HtmlElement",
+    "Window",
+] }
 
